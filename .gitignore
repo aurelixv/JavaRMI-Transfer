@@ -1,0 +1,6 @@
+# ignore tudo
+/*
+
+# menos...
+!src/
+!.gitignore
