@@ -1,4 +1,6 @@
 package Interfaces;
 
-public interface ClientOffer {
+import java.rmi.Remote;
+
+public interface ClientOffer extends Remote {
 }
