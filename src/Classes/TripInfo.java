@@ -7,6 +7,7 @@ public class TripInfo implements Serializable {
 
     //fornecendo o itinerário, data e horário, tipo de veículo,   número   de   passageirosepreço   proposto
 
+    private int index;
     private int itinerario;
     private int data;
     private int horario;
@@ -17,6 +18,13 @@ public class TripInfo implements Serializable {
 
     public TripInfo() {
 
+    }
+
+    public TripInfo(int itnerario, int tipoVeiculo, int numPassageiros, double preco) {
+        this.itinerario = itnerario;
+        this.tipoVeiculo = tipoVeiculo;
+        this.numPassageiros = numPassageiros;
+        this.preco = preco;
     }
 
     public int getItinerario() {
@@ -73,5 +81,21 @@ public class TripInfo implements Serializable {
 
     public void setCliente(Remote cliente) {
         this.cliente = cliente;
+    }
+
+    public void printTrip() {
+        System.out.println(this.getCliente());
+        System.out.println("Index: " + this.index);
+        System.out.println("Itinerario: " + this.itinerario);
+        System.out.println("Num passageiros: " + this.numPassageiros);
+        System.out.println("Preco: " + this.preco);
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 }
