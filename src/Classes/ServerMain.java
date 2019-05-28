@@ -9,6 +9,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class ServerMain {
 
@@ -32,7 +33,6 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
     ServerImpl() throws RemoteException {
         System.out.println("Criando objeto remoto servidor...");
 
-        // TODO: inicializar estrutura de dados aqui
         offer = new ArrayList<>();
         demand = new ArrayList<>();
         index = 0;
@@ -46,41 +46,12 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
     private ArrayList<TripInfo> getTrips(ArrayList<TripInfo> trips, TripInfo trip) {
         ArrayList<TripInfo> candidates = new ArrayList<>();
         for (TripInfo candidate : trips) {
-            if(trip.getItinerario() == candidate.getItinerario() &&
-                    trip.getTipoVeiculo() == candidate.getTipoVeiculo() &&
+            if(trip.getTipoVeiculo() == candidate.getTipoVeiculo() &&
                     trip.getNumPassageiros() <= candidate.getNumPassageiros()) {
                 candidates.add(candidate);
             }
         }
         return candidates;
-    }
-
-    @Override
-    public ArrayList<TripInfo> searchOffers(int itinerario, int numPassageiros, double preco) throws RemoteException {
-        TripInfo trip = new TripInfo();
-        trip.setItinerario(itinerario);
-        trip.setNumPassageiros(numPassageiros);
-        trip.setPreco(preco);
-
-        ArrayList<TripInfo> trips = getTrips(this.offer, trip);
-
-        System.out.println("[ searchOffers ] Viagens enviadas para o cliente.");
-
-        return trips;
-    }
-
-    @Override
-    public ArrayList<TripInfo> searchDemands(int itinerario, int numPassageiros, double preco) throws RemoteException {
-        TripInfo trip = new TripInfo();
-        trip.setItinerario(itinerario);
-        trip.setNumPassageiros(numPassageiros);
-        trip.setPreco(preco);
-
-        ArrayList<TripInfo> trips = getTrips(this.demand, trip);
-
-        System.out.println("[ searchDemands ] Viagens enviadas para o cliente.");
-
-        return trips;
     }
 
     // Metodo para inserir ofertas
@@ -107,9 +78,9 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
 
     }
 
-    // Metodo para inserir demandas
+    // Metodo para inserir demandas e retornar as cotacoes
     @Override
-    public void demandTrip(byte[] demand, Remote client) throws RemoteException {
+    public ArrayList<TripInfo> demandTrip(byte[] demand, Remote client) throws RemoteException {
 
         // Deserealiza a demanda
         TripInfo trip = (TripInfo) Serializer.decode(demand);
@@ -125,9 +96,12 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
 
         // Notifica as ofertas existentes sobre a sua chegada
         for(TripInfo i : trips) {
-            ((Interfaces.Client) i.getCliente()).notification(trip);
+            if(((Interfaces.Client) i.getCliente()).proposal(i.getCliente(), trip)) {
+                bookOffer(i.getIndex());
+            }
         }
 
+        return trips;
     }
 
     private synchronized TripInfo delTrip(ArrayList<TripInfo> trips, int index) {
@@ -143,24 +117,29 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
     }
 
     @Override
-    public int bookOffer(int tripIndex) throws RemoteException {
+    public boolean bookOffer(int tripIndex) throws RemoteException {
+
+        System.out.println("[ bookOffer ] Removendo demanda e oferta...");
 
         TripInfo trip = delTrip(this.offer, tripIndex);
-        trip.printTrip();
 
-        System.out.println(trip.getCliente());
+        if(trip != null) {
+            trip.printTrip();
 
-        ((Interfaces.Client) trip.getCliente()).receiveOffer(trip);
+            ArrayList<TripInfo> trips = getTrips(this.demand, trip);
 
-        return 0;
-    }
+            for (TripInfo i : trips) {
+                if (i.getCliente() == trip.getCliente()) {
+                    delTrip(this.demand, i.getIndex());
+                }
+            }
 
-    @Override
-    public void chamar(String frase, Remote client) throws RemoteException {
-        System.out.println("servidor");
-        Client cli = (Client) client;
-        cli.echo(frase);
-        System.out.println("tchau");
+            return true;
+        }
+
+        //((Interfaces.Client) trip.getCliente()).receiveOffer(trip);
+
+        return false;
     }
 
 }

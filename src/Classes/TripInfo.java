@@ -20,6 +20,12 @@ public class TripInfo implements Serializable {
 
     }
 
+    public TripInfo(int tipoVeiculo, int numPassageiros, double preco) {
+        this.tipoVeiculo = tipoVeiculo;
+        this.numPassageiros = numPassageiros;
+        this.preco = preco;
+    }
+
     public TripInfo(int itnerario, int tipoVeiculo, int numPassageiros, double preco) {
         this.itinerario = itnerario;
         this.tipoVeiculo = tipoVeiculo;
@@ -86,8 +92,8 @@ public class TripInfo implements Serializable {
     public void printTrip() {
         System.out.println(this.getCliente());
         System.out.println("Index: " + this.index);
-        System.out.println("Itinerario: " + this.itinerario);
-        System.out.println("Num passageiros: " + this.numPassageiros);
+        System.out.println("TipoVeiculo: " + this.getTipoVeiculo());
+        System.out.println("NumPassageiros: " + this.numPassageiros);
         System.out.println("Preco: " + this.preco);
     }
 

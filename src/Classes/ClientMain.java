@@ -24,7 +24,7 @@ public class ClientMain {
         // OFERTAS
         if(Integer.parseInt(args[0]) == 1) {
 
-            while(true) {
+//            while(true) {
                 System.out.println("--- Cliente Oferta ---");
                 System.out.println("1 - Cadastrar oferta");
                 System.out.println("9 - Spam (debug)");
@@ -34,9 +34,9 @@ public class ClientMain {
                 switch (in.nextInt()) {
                     case 1:
                         TripInfo trip = new TripInfo();
-                        System.out.print("Itinerario: ");
-                        trip.setItinerario(in.nextInt());
-                        System.out.print("TipoVeiculo: ");
+//                        System.out.print("Itinerario: ");
+//                        trip.setItinerario(in.nextInt());
+                        System.out.print("TipoVeiculo (1) SUV (2) VAN (3) ONIBUS: ");
                         trip.setTipoVeiculo(in.nextInt());
                         System.out.print("NumPassageiros: ");
                         trip.setNumPassageiros(in.nextInt());
@@ -47,19 +47,17 @@ public class ClientMain {
 
                         cli.getServer().offerTrip(Serializer.encode(trip), cli);
 
+                        System.out.println("Oferta cadastrada.");
+
                         break;
                     case 9:
 
                         System.out.println("Enviando ofertas pro servidor...");
 
-                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(
-                                1, 2, 3, 100)), cli);
-                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(
-                                2, 2, 3, 200)), cli);
-                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(
-                                2, 2, 4, 300)), cli);
-                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(
-                                3, 1, 1, 50)), cli);
+                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(1, 3, 200)), cli);
+                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(2, 10, 450)), cli);
+                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(2, 8, 550)), cli);
+                        cli.getServer().offerTrip(Serializer.encode(new TripInfo(3, 20, 1300)), cli);
 
                         break;
 
@@ -68,16 +66,16 @@ public class ClientMain {
                 }
 
             }
-        }
+//        }
 
         // DEMANDAS
         if(Integer.parseInt(args[0]) == 2) {
 
-            while(true) {
+//            while(true) {
 
-                System.out.println("--- Cliente Oferta ---");
-                System.out.println("1 - Cadastrar demanda");
-                System.out.println("2 - Buscar demanda");
+                System.out.println("--- Cliente Demanda ---");
+                System.out.println("1 - Obter cotacao");
+                System.out.println("2 - Reservar oferta");
                 System.out.println("9 - debug");
 
                 System.out.print(">: ");
@@ -87,59 +85,41 @@ public class ClientMain {
                         TripInfo trip = new TripInfo();
                         System.out.print("Itinerario: ");
                         trip.setItinerario(in.nextInt());
-                        System.out.print("TipoVeiculo: ");
+                        System.out.print("TipoVeiculo (1) SUV (2) VAN (3) ONIBUS: ");
                         trip.setTipoVeiculo(in.nextInt());
                         System.out.print("NumPassageiros: ");
                         trip.setNumPassageiros(in.nextInt());
                         System.out.print("Preco: ");
                         trip.setPreco(in.nextDouble());
 
-                        System.out.println("Enviando oferta pro servidor...");
+                        System.out.println("\nConsultando o servidor...\n");
 
-                        cli.getServer().demandTrip(Serializer.encode(trip), cli);
-                        break;
-                    case 2:
-
-                        System.out.print("Itnerario: ");
-                        int itinerario = in.nextInt();
-                        System.out.print("NumPassageiros: ");
-                        int numPassageiros = in.nextInt();
-                        System.out.print("Preco: ");
-                        double preco = in.nextDouble();
-
-                        System.out.println("Buscando demanda no servidor... ");
-
-                        ArrayList<TripInfo> trips = cli.getServer().searchOffers(itinerario, numPassageiros, preco);
+                        ArrayList<TripInfo> trips = cli.getServer().demandTrip(Serializer.encode(trip), cli);
 
                         if(trips.size() > 0) {
-                            System.out.println("Viagens encontradas:");
-                            int i = 1;
-
-                            for(TripInfo candidate : trips) {
-                                System.out.println((i++) + " ------------------------");
-                                candidate.printTrip();
+                            for (TripInfo i : trips) {
+                                i.printTrip();
+                                System.out.println("\n");
                             }
-
-                            System.out.print("Qual viagem deseja reservar?: (-1 para cancelar): ");
-
-                            int aux = in.nextInt();
-
-                            if(aux >= 0) {
-                                System.out.println("Enviando proposta para a oferta...");
-                                if(cli.getServer().bookOffer(aux) == 1) {
-
-                                }
-                            }
-                            else
-                                System.out.println("Cancelando operacao...");
-
                         } else {
-                            System.out.println("Nao foram encontradas viagens.");
+                            System.out.println("Nenhum resultado encontrado.");
                         }
+
+                        break;
+                    case 2:
+                        System.out.print("Digite o index da oferta a ser reservada: ");
+
+                        if(cli.getServer().bookOffer(in.nextInt())) {
+                            System.out.println("Reservado com sucesso.");
+                        } else {
+                            System.out.println("Erro ao reservar oferta.");
+                        }
+
+                        break;
 
                     case 9:
 
-                        System.out.println("Enviando oferta pro servidor...");
+                        System.out.println("Enviando demanda pro servidor...");
                         cli.getServer().demandTrip(Serializer.encode(new TripInfo(
                                 2, 2, 2, 100
                         )), cli);
@@ -155,7 +135,7 @@ public class ClientMain {
         }
     }
 
-}
+//}
 
 class ClientImpl extends UnicastRemoteObject implements Client {
 
@@ -165,18 +145,14 @@ class ClientImpl extends UnicastRemoteObject implements Client {
         this.server = (Interfaces.Server) server;
     }
 
-    @Override
-    public void echo(String frase) throws RemoteException {
-        System.out.println(frase);
-        this.server.chamar(frase, this);
-    }
 
     @Override
-    public boolean receiveOffer(TripInfo trip) throws RemoteException {
+    public boolean receiveOffer(TripInfo trip, double newValue) throws RemoteException {
         System.out.println("Viagem recebida:");
         System.out.println("Itinerario: " + trip.getItinerario());
         System.out.println("Num passageiros: " + trip.getNumPassageiros());
         System.out.println("Preco: " + trip.getPreco());
+        System.out.println("Novo preco: " + newValue);
         System.out.print("Aceita essa oferta? (1 - Sim, 0 - Nao) >: ");
         Scanner scan = new Scanner(System.in);
         int decision = scan.nextInt();
@@ -193,12 +169,30 @@ class ClientImpl extends UnicastRemoteObject implements Client {
 
     @Override
     public void notification(TripInfo trip) throws RemoteException {
-        System.out.println("\n---- Notificacao ----");
+        System.out.println("\n\n---- Notificacao ----");
         trip.printTrip();
+        System.out.println("---------------------\n\n");
     }
 
     Interfaces.Server getServer() {
         return this.server;
+    }
+
+    @Override
+    public boolean proposal(Remote client, TripInfo trip) throws RemoteException {
+        ((Interfaces.Client) client).notification(trip);
+
+        System.out.print("Deseja fazer nova proposta diretamente a esse cliente? (1) Sim (0) Nao: ");
+        Scanner in = new Scanner(System.in);
+        int option = in.nextInt();
+
+        if(option == 1) {
+            System.out.print("Digite o novo valor: ");
+            if(((Interfaces.Client) trip.getCliente()).receiveOffer(trip, in.nextDouble())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
