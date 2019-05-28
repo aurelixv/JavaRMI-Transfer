@@ -96,9 +96,7 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
 
         // Notifica as ofertas existentes sobre a sua chegada
         for(TripInfo i : trips) {
-            if(((Interfaces.Client) i.getCliente()).proposal(i.getCliente(), trip)) {
-                bookOffer(i.getIndex());
-            }
+            ((Interfaces.Client) i.getCliente()).proposal(i.getCliente(), trip, i.getIndex());
         }
 
         return trips;
@@ -121,9 +119,12 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
 
         System.out.println("[ bookOffer ] Removendo demanda e oferta...");
 
+        System.out.println("index " + tripIndex);
+
         TripInfo trip = delTrip(this.offer, tripIndex);
 
         if(trip != null) {
+
             trip.printTrip();
 
             ArrayList<TripInfo> trips = getTrips(this.demand, trip);
@@ -134,6 +135,7 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
                 }
             }
 
+
             return true;
         }
 
@@ -142,4 +144,11 @@ class ServerImpl extends UnicastRemoteObject implements Interfaces.Server {
         return false;
     }
 
+    @Override
+    public boolean makeOffer(int index, TripInfo trip, double value) throws RemoteException {
+        if(((Interfaces.Client) trip.getCliente()).receiveOffer(trip, value)) {
+            return bookOffer(index);
+        }
+        return false;
+    }
 }

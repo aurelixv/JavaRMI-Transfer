@@ -17,16 +17,16 @@ public class ClientMain {
         int port = 6000;
         Registry registry = LocateRegistry.getRegistry(port);
         ClientImpl cli = new ClientImpl(registry.lookup("Servidor"));
-        //cli.echo("Ola, mundo!");
 
         Scanner in = new Scanner(System.in);
 
         // OFERTAS
         if(Integer.parseInt(args[0]) == 1) {
 
-//            while(true) {
+            while(true) {
                 System.out.println("--- Cliente Oferta ---");
                 System.out.println("1 - Cadastrar oferta");
+                System.out.println("2 - Propor novo preco");
                 System.out.println("9 - Spam (debug)");
 
                 System.out.print(">: ");
@@ -50,6 +50,25 @@ public class ClientMain {
                         System.out.println("Oferta cadastrada.");
 
                         break;
+
+                    case 2:
+
+                        if(cli.getProposalTrip() != null && cli.getProposalClient() != null) {
+                            System.out.print("Quanto deseja oferecer?: ");
+                            if(cli.getServer().makeOffer(cli.getProposalIndex(), cli.getProposalTrip(), in.nextDouble())) {
+                                System.out.println("Mudanca aceita e oferta reservada.");
+                                cli.setProposalClient(null);
+                                cli.setProposalTrip(null);
+                            } else {
+                                System.out.println("Mudanca recusada.");
+                            }
+                        }
+                        else {
+                            System.out.println("Nenhum cliente demonstrou interesse ainda.");
+                        }
+
+                        break;
+
                     case 9:
 
                         System.out.println("Enviando ofertas pro servidor...");
@@ -66,7 +85,7 @@ public class ClientMain {
                 }
 
             }
-//        }
+        }
 
         // DEMANDAS
         if(Integer.parseInt(args[0]) == 2) {
@@ -141,8 +160,23 @@ class ClientImpl extends UnicastRemoteObject implements Client {
 
     private Interfaces.Server server;
 
+    private Remote proposalClient;
+    private TripInfo proposalTrip;
+
+    public int getProposalIndex() {
+        return proposalIndex;
+    }
+
+    public void setProposalIndex(int proposalIndex) {
+        this.proposalIndex = proposalIndex;
+    }
+
+    private int proposalIndex;
+
     ClientImpl(Remote server) throws RemoteException {
         this.server = (Interfaces.Server) server;
+        this.proposalClient = null;
+        this.proposalTrip = null;
     }
 
 
@@ -157,7 +191,7 @@ class ClientImpl extends UnicastRemoteObject implements Client {
         Scanner scan = new Scanner(System.in);
         int decision = scan.nextInt();
 
-        if(decision == 1) {
+        if (decision == 1) {
             System.out.println("Oferta aceita.");
             return true;
         } else {
@@ -179,20 +213,40 @@ class ClientImpl extends UnicastRemoteObject implements Client {
     }
 
     @Override
-    public boolean proposal(Remote client, TripInfo trip) throws RemoteException {
+    public void proposal(Remote client, TripInfo trip, int index) throws RemoteException {
         ((Interfaces.Client) client).notification(trip);
 
-        System.out.print("Deseja fazer nova proposta diretamente a esse cliente? (1) Sim (0) Nao: ");
-        Scanner in = new Scanner(System.in);
-        int option = in.nextInt();
+        this.proposalClient = client;
+        this.proposalIndex = index;
+        this.proposalTrip = trip;
 
-        if(option == 1) {
-            System.out.print("Digite o novo valor: ");
-            if(((Interfaces.Client) trip.getCliente()).receiveOffer(trip, in.nextDouble())) {
-                return true;
-            }
-        }
-        return false;
+//        System.out.print("Deseja fazer nova proposta diretamente a esse cliente? (1) Sim (0) Nao: ");
+//        Scanner in = new Scanner(System.in);
+//        int option = in.nextInt();
+//
+//        if(option == 1) {
+//            System.out.print("Digite o novo valor: ");
+//            if(((Interfaces.Client) trip.getCliente()).receiveOffer(trip, in.nextDouble())) {
+//                return true;
+//            }
+//        }
+//        return false;
+    }
+
+
+    public Remote getProposalClient() {
+        return proposalClient;
+    }
+
+    public TripInfo getProposalTrip() {
+        return proposalTrip;
+    }
+    public void setProposalClient(Remote proposalClient) {
+        this.proposalClient = proposalClient;
+    }
+
+    public void setProposalTrip(TripInfo proposalTrip) {
+        this.proposalTrip = proposalTrip;
     }
 
 }
